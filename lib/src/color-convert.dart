@@ -1,48 +1,71 @@
-class ColorConvert{
+class ColorConvert {
+  /// Converts RGB values to HSL format
+  ///
+  /// Takes RGB values [r], [g], [b] in range 0-255
+  /// Returns a Map with keys 'h' (hue), 's' (saturation %), 'l' (lightness %)
+  static Map<String, String> rgbToHsl({
+    required int r,
+    required int g,
+    required int b,
+  }) {
+    // Normalize RGB values to 0-1 range
+    double rNorm = r / 255.0;
+    double gNorm = g / 255.0;
+    double bNorm = b / 255.0;
 
-  /// to convert ncs rgb to hsl
-  static Map<String,String> rgbToHsl({required int r,required int g,required int b}) {
-    // ignore: prefer_typing_uninitialized_variables
-    var min, max, i, l, s, maxcolor, h, rgb = [];
-    rgb = [r / 255 , g / 255 ,  b / 255 ];
+    double min = [rNorm, gNorm, bNorm].reduce((a, b) => a < b ? a : b);
+    double max = [rNorm, gNorm, bNorm].reduce((a, b) => a > b ? a : b);
+    double delta = max - min;
 
-    min = rgb[0];
-    max = rgb[0];
-    maxcolor = 0;
-    for (i = 0; i < rgb.length - 1; i++) {
-      if (rgb[i + 1] <= min) {min = rgb[i + 1];}
-      if (rgb[i + 1] >= max) {max = rgb[i + 1];maxcolor = i + 1;}
-    }
-    if (maxcolor == 0) {
-      h = (rgb[1] - rgb[2]) / (max - min);
-    }
-    if (maxcolor == 1) {
-      h = 2 + (rgb[2] - rgb[0]) / (max - min);
-    }
-    if (maxcolor == 2) {
-      h = 4 + (rgb[0] - rgb[1]) / (max - min);
-    }
-    if (h == null) {h = 0;}
-    h = h * 60;
-    if (h < 0) {h = h + 360; }
-    l = (min + max) / 2;
-    if (min == max) {
-      s = 0;
-    } else {
-      if (l < 0.5) {
-        s = (max - min) / (max + min);
+    // Calculate lightness
+    double lightness = (min + max) / 2;
+
+    double hue = 0;
+    double saturation = 0;
+
+    if (delta != 0) {
+      // Calculate saturation
+      saturation =
+          lightness < 0.5 ? delta / (max + min) : delta / (2 - max - min);
+
+      // Calculate hue
+      if (max == rNorm) {
+        hue = ((gNorm - bNorm) / delta) % 6;
+      } else if (max == gNorm) {
+        hue = (bNorm - rNorm) / delta + 2;
       } else {
-        s = (max - min) / (2 - max - min);
+        hue = (rNorm - gNorm) / delta + 4;
       }
+      hue *= 60;
+      if (hue < 0) hue += 360;
     }
-    s = s;
-    return {"h" : h.round().toString(), "s" : "${(s*100).round()}%", "l" : "${(l*100).round()}%"};
+
+    return {
+      "h": hue.round().toString(),
+      "s": "${(saturation * 100).round()}%",
+      "l": "${(lightness * 100).round()}%"
+    };
   }
 
-  /// to convert ncs rgb to hex
-  static String rgbToHex({required int r,required int g,required int b}) {
-    var hex = "#${r.toRadixString(16)}${g.toRadixString(16)}${b.toRadixString(16)}";
-    return hex;
-  }
+  /// Converts RGB values to HEX format
+  ///
+  /// Takes RGB values [r], [g], [b] in range 0-255
+  /// Returns a hex string in format #RRGGBB
+  static String rgbToHex({
+    required int r,
+    required int g,
+    required int b,
+  }) {
+    // Ensure values are within valid range
+    r = r.clamp(0, 255);
+    g = g.clamp(0, 255);
+    b = b.clamp(0, 255);
 
+    // Convert to hex with proper padding
+    String rHex = r.toRadixString(16).padLeft(2, '0');
+    String gHex = g.toRadixString(16).padLeft(2, '0');
+    String bHex = b.toRadixString(16).padLeft(2, '0');
+
+    return "#$rHex$gHex$bHex";
+  }
 }
